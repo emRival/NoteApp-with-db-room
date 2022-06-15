@@ -22,6 +22,8 @@ class MainActivity : AppCompatActivity() {
     lateinit var noteAdapter: NoteAdapter
     private lateinit var binding: ActivityMainBinding
 
+    public fun notez() = reload()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +36,10 @@ class MainActivity : AppCompatActivity() {
         binding.fab.setOnClickListener {
             insertDialog()
         }
+
+
+
+
     }
 
     override fun onStart() {
@@ -64,8 +70,7 @@ class MainActivity : AppCompatActivity() {
                         // menggunakan entitiy yang sudah di buat
                         Note(0, title.text.toString(), desc.text.toString())
                     )
-                    finish()
-                    startActivity(intent)
+          this@MainActivity.let { reload() }
                 }
 
             })
@@ -73,6 +78,16 @@ class MainActivity : AppCompatActivity() {
             "close",
             DialogInterface.OnClickListener { dialogInterface, i -> dialogInterface.dismiss() })
         alert.show()
+    }
+
+    private fun reload() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val notes = db.noteDao().getAllNotes()
+            Log.d("MainActivity", "DBResponse: $notes")
+            withContext(Dispatchers.Main) {
+                noteAdapter.setData(notes)
+            }
+        }
     }
 
     private fun setupRecyclerView() {
