@@ -12,6 +12,7 @@
         <entry key="app/src/main/res/layout/add_layout.xml" value="0.28125" />
         <entry key="app/src/main/res/layout/content_main.xml" value="0.32627410888671876" />
         <entry key="app/src/main/res/layout/fragment_first.xml" value="0.28337845111448834" />
+        <entry key="app/src/main/res/layout/loading_dialog.xml" value="0.16458333333333333" />
       </map>
     </option>
   </component>

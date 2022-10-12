@@ -1,7 +1,9 @@
 package com.rival.noteapps
 
+import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import android.widget.EditText
@@ -19,6 +21,8 @@ import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
     val db by lazy { NoteDB(this) }
+
+    var progressDialog: Dialog? = null
     lateinit var noteAdapter: NoteAdapter
     private lateinit var binding: ActivityMainBinding
 
@@ -37,6 +41,15 @@ class MainActivity : AppCompatActivity() {
             insertDialog()
         }
 
+        progressDialog = Dialog(this)
+        progressDialog?.setContentView(R.layout.loading_dialog)
+        progressDialog?.let {
+            it.setCancelable(false)
+            it.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        }
+        // progress dialog with time out
+
+
 
 
 
@@ -54,6 +67,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun insertDialog() {
+
+        progressDialog?.show()
+
+
         val alert = AlertDialog.Builder(this)
         val view = layoutInflater.inflate(R.layout.add_layout, null)
         alert.setView(view)
@@ -70,14 +87,29 @@ class MainActivity : AppCompatActivity() {
                         // menggunakan entitiy yang sudah di buat
                         Note(0, title.text.toString(), desc.text.toString())
                     )
-          this@MainActivity.let { reload() }
+                    withContext(Dispatchers.Main) {
+                        Handler().postDelayed({
+                            progressDialog?.dismiss()
+                        }, 2000)
+                    }
+
+//          this@MainActivity.let { reload() }
                 }
+
+
+
+
+
 
             })
         alert.setNeutralButton(
             "close",
-            DialogInterface.OnClickListener { dialogInterface, i -> dialogInterface.dismiss() })
+            DialogInterface.OnClickListener { dialogInterface, i -> dialogInterface.dismiss()
+                progressDialog?.dismiss()}
+
+        )
         alert.show()
+
     }
 
     private fun reload() {

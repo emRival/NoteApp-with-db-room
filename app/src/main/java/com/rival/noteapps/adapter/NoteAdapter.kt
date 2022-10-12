@@ -25,6 +25,7 @@ import kotlinx.android.synthetic.main.content_main.view.txt_title
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class NoteAdapter(private val noteList: ArrayList<Note>) :
@@ -81,13 +82,13 @@ class NoteAdapter(private val noteList: ArrayList<Note>) :
                             // menggunakan entitiy yang sudah di buat
                             Note(noteList[position].id, title.text.toString(), desc.text.toString())
                         )
-                        (holder.view.context as Activity).finish()
-                        (holder.view.context as Activity).startActivity(
-                            Intent(
-                                holder.view.context,
-                                MainActivity::class.java
-                            )
-                        )
+
+                        val notes = db.noteDao().getAllNotes()
+                        withContext(Dispatchers.Main) {
+                            noteList.clear()
+                            noteList.addAll(notes)
+                            notifyDataSetChanged()
+                        }
                     }
                 })
             alert.setNeutralButton(
@@ -97,17 +98,33 @@ class NoteAdapter(private val noteList: ArrayList<Note>) :
         }
 
         holder.view.btn_delete.setOnClickListener {
-            CoroutineScope(Dispatchers.IO).launch {
-                val db by lazy { NoteDB(holder.view.context as MainActivity) }
-                db.noteDao().deleteNote(noteList[position])
-                (holder.view.context as Activity).finish()
-                (holder.view.context as Activity).startActivity(
-                    Intent(
-                        holder.view.context,
-                        MainActivity::class.java
-                    )
-                )
+            val alertDialog = AlertDialog.Builder(holder.view.context).create()
+            alertDialog.setTitle("Delete Catatan")
+            alertDialog.setMessage("Apakah anda yakin ingin menghapus catatan ${noteList[position].title} ?")
+            alertDialog.setButton(
+                AlertDialog.BUTTON_POSITIVE, "Delete"
+            ) { dialog, which ->
+                CoroutineScope(Dispatchers.IO).launch {
+                    val db by lazy { NoteDB(holder.view.context as MainActivity) }
+                    db.noteDao().deleteNote(noteList[position])
+                   // refresh
+
+
+                    val notes = db.noteDao().getAllNotes()
+                    withContext(Dispatchers.Main) {
+                        noteList.clear()
+                        noteList.addAll(notes)
+                        notifyDataSetChanged()
+                    }
+
+
+                }
             }
+            alertDialog.setButton(
+                AlertDialog.BUTTON_NEGATIVE, "Close"
+            ) { dialog, which -> dialog.dismiss() }
+            alertDialog.show()
+
         }
     }
 
